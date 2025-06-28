@@ -29,6 +29,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.34")
     compileOnly("me.clip:placeholderapi:2.11.6")
     implementation("org.mongodb:mongodb-driver-sync:5.2.1")
+    implementation("redis.clients:jedis:5.0.2")
     implementation("com.github.Revxrsal.Lamp:common:3.1.5")
     implementation("com.github.Revxrsal.Lamp:bukkit:3.1.5")
 }

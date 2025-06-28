@@ -1,0 +1,25 @@
+SERVER:
+  NAME: "Lobby"
+  UPDATE-INTERVAL: 60  # Tiempo en segundos para actualizar el estado online
+
+MONGO:
+  URI: "mongodb://localhost:27017"
+  DATABASE: "StaffSync"
+  COLLECTION: "players"
+
+REDIS:
+  HOST: "127.0.0.1"
+  PORT: 6379
+  PASSWORD: "J12N8K3`]wxt"
+  CHANNEL: "staffsync:updates"
+
+
+
+
+# Configuración del Sistema
+system:
+  # Reseteo automático de tiempos diarios
+  daily-reset:
+    enabled: true
+    hour: 0     # Hora del día (0-23)
+    minute: 0   # Minuto (0-59)
