@@ -14,6 +14,7 @@ package dev.anhuar.staffSync.handler;
  */
 
 import dev.anhuar.staffSync.StaffSync;
+import dev.anhuar.staffSync.command.AdminCommand;
 import dev.anhuar.staffSync.command.ManagementCommand;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
 
@@ -31,6 +32,7 @@ public class CommandHandler {
     }
 
     private void registerCommands() {
+        commandHandler.register(new AdminCommand(plugin));
         commandHandler.register(new ManagementCommand(plugin));
     }
 }

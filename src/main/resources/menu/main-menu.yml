@@ -1,6 +1,8 @@
 MAIN-MENU:
   TITLE: "Gestión del Staff"
   SIZE: 6
+
+  # Define los slots donde aparecerán las cabezas del staff
   STAFF-SLOTS:
     - 10
     - 11
@@ -31,6 +33,21 @@ MAIN-MENU:
     - 42
     - 43
 
+  # Configuración de las cabezas de staff
+  STAFF-HEAD:
+    NAME: "&e{name}"
+    LORE:
+      - "&7&m------------------"
+      - "{online}"
+      - "&eTiempo hoy: &f{daily-time}"
+      - "&7&m------------------"
+      - "&bÚltimo servidor: &f{last-server}"
+      - "&bÚltima conexión: &f{last-seen}"
+      - "&7&m------------------"
+    ONLINE-TEXT: "&aEstado: &fConectado\n&aServidor: &f{current-server}"
+    OFFLINE-TEXT: "&cEstado: &fDesconectado"
+
+  # Items decorativos del menú
   DECORATION:
     BORDER:
       ENABLED: true
@@ -41,6 +58,7 @@ MAIN-MENU:
         - 9, 17, 18, 26, 27, 35, 36, 44
         - 45, 46, 47, 48, 49, 50, 51, 52, 53
 
+    # Items personalizados adicionales
     CUSTOM-ITEMS:
       REFRESH:
         ENABLED: true

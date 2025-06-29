@@ -176,30 +176,47 @@ public class MainMenu extends MenuUtil {
 
         // Configurar cabeza del jugador
         meta.setOwningPlayer(Bukkit.getOfflinePlayer(UUID.fromString(staffMember.getUuid())));
-        meta.setDisplayName("§e" + staffMember.getName());
 
-        // Crear lore con información del staff
+        // Obtener formato del nombre
+        String nameFormat = plugin.getStaffMenu().getString("MAIN-MENU.STAFF-HEAD.NAME");
+        meta.setDisplayName(nameFormat.replace("{name}", staffMember.getName()).replace("&", "§"));
+
+        // Obtener formato del lore
+        List<String> loreFormat = plugin.getStaffMenu().getConfig().getStringList("MAIN-MENU.STAFF-HEAD.LORE");
         List<String> lore = new ArrayList<>();
-        lore.add("§7§m------------------");
 
+        // Estado online/offline
         boolean isOnline = staffMember.isOnline();
+        String statusText;
         if (isOnline) {
-            lore.add("§aEstado: §fConectado");
-            lore.add("§aServidor: §f" + staffMember.getCurrentServer());
+            statusText = plugin.getStaffMenu().getConfig().getString("MAIN-MENU.STAFF-HEAD.ONLINE-TEXT");
+            statusText = statusText.replace("{current-server}", staffMember.getCurrentServer());
         } else {
-            lore.add("§cEstado: §fDesconectado");
+            statusText = plugin.getStaffMenu().getConfig().getString("MAIN-MENU.STAFF-HEAD.OFFLINE-TEXT");
         }
 
-        lore.add("§eTiempo hoy: §f" + formatTime(staffMember.getDailyTime()));
+        // Formatear tiempo
+        String formattedTime = formatTime(staffMember.getDailyTime());
 
-        lore.add("§7§m------------------");
-        lore.add("§bÚltimo servidor: §f" + staffMember.getLastServer());
-
+        // Formatear fecha
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         String lastSeen = sdf.format(new Date(staffMember.getLastSeen()));
-        lore.add("§bÚltima conexión: §f" + lastSeen);
 
-        lore.add("§7§m------------------");
+        // Procesar el lore completo con placeholders
+        for (String line : loreFormat) {
+            if (line.contains("{online}")) {
+                // Manejar el caso especial de estado online/offline que puede tener múltiples líneas
+                for (String statusLine : statusText.split("\n")) {
+                    lore.add(statusLine.replace("&", "§"));
+                }
+            } else {
+                lore.add(line
+                        .replace("{daily-time}", formattedTime)
+                        .replace("{last-server}", staffMember.getLastServer())
+                        .replace("{last-seen}", lastSeen)
+                        .replace("&", "§"));
+            }
+        }
 
         meta.setLore(lore);
         head.setItemMeta(meta);
