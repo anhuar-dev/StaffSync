@@ -14,7 +14,7 @@ public final class StaffSync extends JavaPlugin {
     @Setter
     private static StaffSync instance;
 
-    private ConfigUtil setting, message, menu;
+    private ConfigUtil setting, message, staffMenu, promoteMenu, demoteMenu;
 
     private MongoHandler mongoHandler;
     private RedisHandler redisHandler;
@@ -30,7 +30,9 @@ public final class StaffSync extends JavaPlugin {
 
         setting = new ConfigUtil(this, "setting.yml");
         message = new ConfigUtil(this, "message.yml");
-        menu = new ConfigUtil(this, "menu.yml");
+        staffMenu = new ConfigUtil(this, "menu/main-menu.yml");
+        promoteMenu = new ConfigUtil(this, "menu/promote-menu.yml");
+        demoteMenu = new ConfigUtil(this, "menu/demo-menu.yml");
 
         mongoHandler = new MongoHandler(this);
         redisHandler = new RedisHandler(this);

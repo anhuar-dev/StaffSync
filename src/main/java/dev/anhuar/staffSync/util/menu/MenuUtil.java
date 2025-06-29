@@ -109,4 +109,9 @@ public abstract class MenuUtil implements IMenu {
     public @NotNull Inventory getInventory() {
         return inventory;
     }
+
+    public void clearItems() {
+        this.inventory.clear();
+        this.playerActions.clear();
+    }
 }
