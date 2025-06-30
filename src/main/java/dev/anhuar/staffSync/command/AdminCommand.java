@@ -40,8 +40,8 @@ public class AdminCommand {
         plugin.getSetting().reload();
         plugin.getMessage().reload();
         plugin.getStaffMenu().reload();
-        plugin.getDemoteMenu().reload();
-        plugin.getPromoteMenu().reload();
+        plugin.getStaffDemoteMenu().reload();
+        plugin.getStaffPromoteMenu().reload();
         player.sendMessage(ChatColor.GREEN + "StaffSync has been reloaded!");
     }
 }

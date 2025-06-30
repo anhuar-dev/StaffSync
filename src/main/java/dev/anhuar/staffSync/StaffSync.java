@@ -1,7 +1,9 @@
 package dev.anhuar.staffSync;
 
 import dev.anhuar.staffSync.handler.*;
+import dev.anhuar.staffSync.menu.DemoteMenu;
 import dev.anhuar.staffSync.menu.MainMenu;
+import dev.anhuar.staffSync.menu.PromoteMenu;
 import dev.anhuar.staffSync.util.ConfigUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +16,7 @@ public final class StaffSync extends JavaPlugin {
     @Setter
     private static StaffSync instance;
 
-    private ConfigUtil setting, message, staffMenu, promoteMenu, demoteMenu;
+    private ConfigUtil setting, message, staffMenu, staffPromoteMenu, staffDemoteMenu;
 
     private MongoHandler mongoHandler;
     private RedisHandler redisHandler;
@@ -22,6 +24,8 @@ public final class StaffSync extends JavaPlugin {
     private ListenerHandler listenerHandler;
     private ManagerHandler managerHandler;
     private MainMenu mainMenu;
+    private DemoteMenu demoteMenu;
+    private PromoteMenu promoteMenu;
 
     @Override
     public void onEnable() {
@@ -31,8 +35,8 @@ public final class StaffSync extends JavaPlugin {
         setting = new ConfigUtil(this, "setting.yml");
         message = new ConfigUtil(this, "message.yml");
         staffMenu = new ConfigUtil(this, "menu/main-menu.yml");
-        promoteMenu = new ConfigUtil(this, "menu/promote-menu.yml");
-        demoteMenu = new ConfigUtil(this, "menu/demo-menu.yml");
+        staffPromoteMenu = new ConfigUtil(this, "menu/promote-menu.yml");
+        staffDemoteMenu = new ConfigUtil(this, "menu/demote-menu.yml");
 
         mongoHandler = new MongoHandler(this);
         redisHandler = new RedisHandler(this);

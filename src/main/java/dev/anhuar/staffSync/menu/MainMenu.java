@@ -15,6 +15,7 @@ package dev.anhuar.staffSync.menu;
 
 import dev.anhuar.staffSync.StaffSync;
 import dev.anhuar.staffSync.data.DPlayer;
+import dev.anhuar.staffSync.util.ColorUtil;
 import dev.anhuar.staffSync.util.menu.MenuUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -111,7 +112,20 @@ public class MainMenu extends MenuUtil {
 
         int maxStaffToShow = Math.min(validStaffMembers.size(), staffSlots.size());
         for (int i = 0; i < maxStaffToShow; i++) {
-            setItem(staffSlots.get(i), createStaffHead(validStaffMembers.get(i)));
+            ItemStack head = createStaffHead(validStaffMembers.get(i));
+            final DPlayer staffMember = validStaffMembers.get(i);
+
+            setItem(staffSlots.get(i), head, (player, event) -> {
+                event.setCancelled(true);
+
+                String targetName = staffMember.getName();
+
+                if (event.isLeftClick()) {
+                    new PromoteMenu(plugin, targetName).openMenu(player);
+                } else if (event.isRightClick()) {
+                    new DemoteMenu(plugin, targetName).openMenu(player);
+                }
+            });
         }
     }
 
@@ -205,7 +219,7 @@ public class MainMenu extends MenuUtil {
         meta.setOwningPlayer(Bukkit.getOfflinePlayer(UUID.fromString(staffMember.getUuid())));
 
         String nameFormat = plugin.getStaffMenu().getConfig().getString("MAIN-MENU.STAFF-HEAD.NAME", "&e{name}");
-        meta.setDisplayName(nameFormat.replace("{name}", staffMember.getName()).replace("&", "§"));
+        meta.setDisplayName(ColorUtil.format(nameFormat.replace("{name}", staffMember.getName())));
 
         meta.setLore(createStaffHeadLore(staffMember));
 
@@ -226,7 +240,7 @@ public class MainMenu extends MenuUtil {
             if (line.contains("{online}")) {
                 addStatusLines(lore, statusText);
             } else {
-                lore.add(replacePlaceholders(line, staffMember, formattedTime, lastSeen));
+                lore.add(ColorUtil.format(replacePlaceholders(line, staffMember, formattedTime, lastSeen)));
             }
         }
 
@@ -244,12 +258,15 @@ public class MainMenu extends MenuUtil {
 
     private void addStatusLines(List<String> lore, String statusText) {
         for (String statusLine : statusText.split("\n")) {
-            lore.add(statusLine.replace("&", "§"));
+            lore.add(ColorUtil.format(statusLine));
         }
     }
 
     private String replacePlaceholders(String line, DPlayer staffMember, String formattedTime, String lastSeen) {
-        return line.replace("{daily-time}", formattedTime).replace("{last-server}", staffMember.getLastServer()).replace("{last-seen}", lastSeen).replace("&", "§");
+        return line
+                .replace("{daily-time}", formattedTime)
+                .replace("{last-server}", staffMember.getLastServer())
+                .replace("{last-seen}", lastSeen);
     }
 
     private String formatDate(long timestamp) {
@@ -260,25 +277,27 @@ public class MainMenu extends MenuUtil {
     private ItemStack createNamedItem(Material material, String name) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name.replace("&", "§"));
-        item.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName(ColorUtil.format(name));
+            item.setItemMeta(meta);
+        }
         return item;
     }
 
     private ItemStack createItem(Material material, String name, List<String> lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name.replace("&", "§"));
-
-        if (!lore.isEmpty()) {
-            List<String> coloredLore = new ArrayList<>();
-            for (String line : lore) {
-                coloredLore.add(line.replace("&", "§"));
+        if (meta != null) {
+            meta.setDisplayName(ColorUtil.format(name));
+            if (lore != null && !lore.isEmpty()) {
+                List<String> coloredLore = new ArrayList<>();
+                for (String line : lore) {
+                    coloredLore.add(ColorUtil.format(line));
+                }
+                meta.setLore(coloredLore);
             }
-            meta.setLore(coloredLore);
+            item.setItemMeta(meta);
         }
-
-        item.setItemMeta(meta);
         return item;
     }
 

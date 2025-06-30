@@ -1,0 +1,77 @@
+DEMOTE-MENU:
+  TITLE: "&cDegradación de Staff"
+  SIZE: 4
+  TARGET-PLAYER: "{name}"
+
+  # Decoración del menú
+  DECORATION:
+    BORDER:
+      ENABLED: true
+      MATERIAL: "BLACK_STAINED_GLASS_PANE"
+      NAME: "&8"
+      SLOTS:
+        - 0, 1, 2, 3, 4, 5, 6, 7, 8
+        - 9, 17, 18, 26, 27
+        - 28, 29, 30, 31, 32, 33, 34, 35
+
+    # Items personalizados adicionales
+    CUSTOM-ITEMS:
+      BACK:
+        ENABLED: true
+        MATERIAL: "ARROW"
+        NAME: "&cVolver"
+        LORE:
+          - "&7Haz clic para volver al"
+          - "&7menú principal."
+        SLOT: 31
+        ACTION: "back"
+
+  # Rangos disponibles para degradar
+  RANKS:
+    HELPER:
+      ENABLED: true
+      MATERIAL: "LEATHER_HELMET"
+      NAME: "&aQuitar Helper"
+      LORE:
+        - "&7Haz clic para quitar el rango"
+        - "&aHelper &7a {player}"
+        - ""
+        - "&8Comando: &7/lp user {player} parent remove helper"
+      SLOT: 11
+      RANK: "helper"
+
+    MOD:
+      ENABLED: true
+      MATERIAL: "IRON_HELMET"
+      NAME: "&bQuitar Moderador"
+      LORE:
+        - "&7Haz clic para quitar el rango"
+        - "&bModerador &7a {player}"
+        - ""
+        - "&8Comando: &7/lp user {player} parent remove mod"
+      SLOT: 12
+      RANK: "mod"
+
+    ADMIN:
+      ENABLED: true
+      MATERIAL: "DIAMOND_HELMET"
+      NAME: "&cQuitar Administrador"
+      LORE:
+        - "&7Haz clic para quitar el rango"
+        - "&cAdministrador &7a {player}"
+        - ""
+        - "&8Comando: &7/lp user {player} parent remove admin"
+      SLOT: 14
+      RANK: "admin"
+
+    OWNER:
+      ENABLED: true
+      MATERIAL: "NETHERITE_HELMET"
+      NAME: "&4Quitar Owner"
+      LORE:
+        - "&7Haz clic para quitar el rango"
+        - "&4Owner &7a {player}"
+        - ""
+        - "&8Comando: &7/lp user {player} parent remove owner"
+      SLOT: 15
+      RANK: "owner"
