@@ -24,11 +24,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 public class MainMenu extends MenuUtil {
     private final StaffSync plugin;
@@ -37,59 +35,80 @@ public class MainMenu extends MenuUtil {
         super(6, plugin.getStaffMenu().getString("MAIN-MENU.TITLE"));
         this.plugin = plugin;
 
-        // Configuramos comportamiento por defecto para cancelar interacciones
         this.setClickAction((player, event) -> event.setCancelled(true));
         this.setDragAction((player, event) -> event.setCancelled(true));
     }
 
     @Override
     public void setItems() {
-        // Limpiar el inventario completamente antes de añadir nuevos elementos
         clearItems();
 
-        // Añadir elementos decorativos configurados
         addDecorativeItems();
 
-        // Obtener todos los jugadores con permisos de staff según la base de datos
         List<DPlayer> staffMembers = plugin.getManagerHandler().getPlayerDataManager().getAllStaffMembers();
+
+        StaffValidationResult result = validateStaffMembers(staffMembers);
+
+        removeInvalidStaffMembers(result.membersToRemove);
+
+        displayStaffHeads(result.validStaffMembers);
+    }
+
+    private StaffValidationResult validateStaffMembers(List<DPlayer> staffMembers) {
         List<DPlayer> validStaffMembers = new ArrayList<>();
         List<UUID> membersToRemove = new ArrayList<>();
 
-        // Verificar permisos actuales (código existente para validación)
         for (DPlayer staffMember : staffMembers) {
-            UUID uuid = UUID.fromString(staffMember.getUuid());
-            Player player = Bukkit.getPlayer(uuid);
-            boolean hasStaffPerm = false;
+            processStaffMember(staffMember, membersToRemove, validStaffMembers);
+        }
 
-            // Para jugadores online, verificar permiso actual
-            if (player != null && player.isOnline()) {
-                hasStaffPerm = player.hasPermission("staff.magnament");
+        return new StaffValidationResult(validStaffMembers, membersToRemove);
+    }
 
-                if (!hasStaffPerm && staffMember.hasStaffPermission()) {
-                    membersToRemove.add(uuid);
-                } else if (hasStaffPerm) {
-                    if (!staffMember.hasStaffPermission()) {
-                        staffMember.setHasStaffPermission(true);
-                        plugin.getManagerHandler().getPlayerDataManager().save(uuid);
-                    }
-                    validStaffMembers.add(staffMember);
-                }
-            } else if (staffMember.hasStaffPermission()) {
+    private void processStaffMember(DPlayer staffMember, List<UUID> membersToRemove, List<DPlayer> validStaffMembers) {
+        UUID uuid = UUID.fromString(staffMember.getUuid());
+        Player player = Bukkit.getPlayer(uuid);
+
+        if (player == null || !player.isOnline()) {
+            if (staffMember.hasStaffPermission()) {
                 validStaffMembers.add(staffMember);
             }
+            return;
         }
 
-        // Eliminar miembros sin permisos de la base de datos
-        if (!membersToRemove.isEmpty()) {
-            for (UUID uuid : membersToRemove) {
-                plugin.getManagerHandler().getPlayerDataManager().removeStaffMember(uuid);
-            }
+        boolean hasStaffPerm = player.hasPermission("staff.magnament");
+
+        if (!hasStaffPerm && staffMember.hasStaffPermission()) {
+            membersToRemove.add(uuid);
+            return;
         }
 
-        // Obtener los slots configurados para mostrar staff
+        if (hasStaffPerm) {
+            updateStaffPermissionIfNeeded(staffMember, uuid);
+            validStaffMembers.add(staffMember);
+        }
+    }
+
+    private void updateStaffPermissionIfNeeded(DPlayer staffMember, UUID uuid) {
+        if (!staffMember.hasStaffPermission()) {
+            staffMember.setHasStaffPermission(true);
+            plugin.getManagerHandler().getPlayerDataManager().save(uuid);
+        }
+    }
+
+    private void removeInvalidStaffMembers(List<UUID> membersToRemove) {
+        if (membersToRemove.isEmpty()) {
+            return;
+        }
+
+        for (UUID uuid : membersToRemove) {
+            plugin.getManagerHandler().getPlayerDataManager().removeStaffMember(uuid);
+        }
+    }
+
+    private void displayStaffHeads(List<DPlayer> validStaffMembers) {
         List<Integer> staffSlots = plugin.getStaffMenu().getConfig().getIntegerList("MAIN-MENU.STAFF-SLOTS");
 
-        // Mostrar solo los miembros válidos en los slots configurados
         int maxStaffToShow = Math.min(validStaffMembers.size(), staffSlots.size());
         for (int i = 0; i < maxStaffToShow; i++) {
             setItem(staffSlots.get(i), createStaffHead(validStaffMembers.get(i)));
@@ -97,140 +116,189 @@ public class MainMenu extends MenuUtil {
     }
 
     private void addDecorativeItems() {
-        // Añadir bordes si están habilitados
-        if (plugin.getStaffMenu().getBoolean("MAIN-MENU.DECORATION.BORDER.ENABLED")) {
-            String materialName = plugin.getStaffMenu().getString("MAIN-MENU.DECORATION.BORDER.MATERIAL");
-            String name = plugin.getStaffMenu().getString("MAIN-MENU.DECORATION.BORDER.NAME");
+        addBorderItemsIfEnabled();
+        addCustomItems();
+    }
 
-            // Obtener la lista de strings y procesarla
-            List<String> slotStrings = plugin.getStaffMenu().getConfig().getStringList("MAIN-MENU.DECORATION.BORDER.SLOTS");
-            List<Integer> slots = new ArrayList<>();
-
-            // Procesar cada línea que contiene slots separados por comas
-            for (String slotLine : slotStrings) {
-                // Eliminar espacios y dividir por comas
-                String[] slotArray = slotLine.replace(" ", "").split(",");
-                for (String slotStr : slotArray) {
-                    try {
-                        int slot = Integer.parseInt(slotStr);
-                        slots.add(slot);
-                    } catch (NumberFormatException e) {
-                        plugin.getLogger().warning("Valor de slot no válido: " + slotStr);
-                    }
-                }
-            }
-
-            ItemStack borderItem = new ItemStack(Material.valueOf(materialName));
-            ItemMeta meta = borderItem.getItemMeta();
-            meta.setDisplayName(name.replace("&", "§"));
-            borderItem.setItemMeta(meta);
-
-            for (int slot : slots) {
-                setItem(slot, borderItem);
-            }
+    private void addBorderItemsIfEnabled() {
+        if (!plugin.getStaffMenu().getBoolean("MAIN-MENU.DECORATION.BORDER.ENABLED")) {
+            return;
         }
 
-        // Añadir items personalizados
-        if (plugin.getStaffMenu().getConfig().isConfigurationSection("MAIN-MENU.DECORATION.CUSTOM-ITEMS")) {
-            for (String key : plugin.getStaffMenu().getConfig().getConfigurationSection("MAIN-MENU.DECORATION.CUSTOM-ITEMS").getKeys(false)) {
-                String path = "MAIN-MENU.DECORATION.CUSTOM-ITEMS." + key;
+        String materialName = plugin.getStaffMenu().getString("MAIN-MENU.DECORATION.BORDER.MATERIAL");
+        String name = plugin.getStaffMenu().getString("MAIN-MENU.DECORATION.BORDER.NAME");
+        List<Integer> slots = getBorderSlots();
 
-                if (plugin.getStaffMenu().getBoolean(path + ".ENABLED")) {
-                    String materialName = plugin.getStaffMenu().getString(path + ".MATERIAL");
-                    String name = plugin.getStaffMenu().getConfig().getString(path + ".NAME", "&f" + key);
-                    List<String> lore = plugin.getStaffMenu().getConfig().getStringList(path + ".LORE");
-                    int slot = plugin.getStaffMenu().getInt(path + ".SLOT");
-                    String action = plugin.getStaffMenu().getString(path + ".ACTION");
+        ItemStack borderItem = createNamedItem(Material.valueOf(materialName), name);
 
-                    ItemStack item = new ItemStack(Material.valueOf(materialName));
-                    ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(name.replace("&", "§"));
+        for (int slot : slots) {
+            setItem(slot, borderItem);
+        }
+    }
 
-                    if (!lore.isEmpty()) {
-                        List<String> coloredLore = new ArrayList<>();
-                        for (String line : lore) {
-                            coloredLore.add(line.replace("&", "§"));
-                        }
-                        meta.setLore(coloredLore);
-                    }
+    private List<Integer> getBorderSlots() {
+        List<String> slotStrings = plugin.getStaffMenu().getConfig().getStringList("MAIN-MENU.DECORATION.BORDER.SLOTS");
+        List<Integer> slots = new ArrayList<>();
 
-                    item.setItemMeta(meta);
-
-                    if ("refresh".equals(action)) {
-                        setItem(slot, item, (player, event) -> {
-                            event.setCancelled(true);
-                            player.sendMessage("§a[StaffSync] §fActualizando lista de staff...");
-                            open(player);
-                        });
-                    } else {
-                        setItem(slot, item);
-                    }
+        for (String slotLine : slotStrings) {
+            String[] slotArray = slotLine.replace(" ", "").split(",");
+            for (String slotStr : slotArray) {
+                try {
+                    slots.add(Integer.parseInt(slotStr));
+                } catch (NumberFormatException e) {
+                    plugin.getLogger().warning("Valor de slot no válido: " + slotStr);
                 }
             }
         }
+
+        return slots;
+    }
+
+    private void addCustomItems() {
+        String basePath = "MAIN-MENU.DECORATION.CUSTOM-ITEMS";
+        if (!plugin.getStaffMenu().getConfig().isConfigurationSection(basePath)) {
+            return;
+        }
+
+        Map<String, BiConsumer<Integer, ItemStack>> actionHandlers = createActionHandlers();
+        BiConsumer<Integer, ItemStack> defaultAction = this::setItem;
+
+        for (String key : plugin.getStaffMenu().getConfig().getConfigurationSection(basePath).getKeys(false)) {
+            String path = basePath + "." + key;
+
+            if (!plugin.getStaffMenu().getBoolean(path + ".ENABLED")) {
+                continue;
+            }
+
+            String materialName = plugin.getStaffMenu().getString(path + ".MATERIAL");
+            String name = plugin.getStaffMenu().getConfig().getString(path + ".NAME", "&f" + key);
+            List<String> lore = plugin.getStaffMenu().getConfig().getStringList(path + ".LORE");
+            int slot = plugin.getStaffMenu().getInt(path + ".SLOT");
+            String action = plugin.getStaffMenu().getConfig().getString(path + ".ACTION", "");
+
+            ItemStack item = createItem(Material.valueOf(materialName), name, lore);
+            actionHandlers.getOrDefault(action, defaultAction).accept(slot, item);
+        }
+    }
+
+    private Map<String, BiConsumer<Integer, ItemStack>> createActionHandlers() {
+        Map<String, BiConsumer<Integer, ItemStack>> actionHandlers = new HashMap<>();
+
+        actionHandlers.put("refresh", (slot, item) -> setItem(slot, item, (player, event) -> {
+            event.setCancelled(true);
+            player.sendMessage("§a[StaffSync] §fActualizando lista de staff...");
+            open(player);
+        }));
+
+        actionHandlers.put("close", (slot, item) -> setItem(slot, item, (player, event) -> {
+            event.setCancelled(true);
+            player.closeInventory();
+        }));
+
+        return actionHandlers;
     }
 
     private ItemStack createStaffHead(DPlayer staffMember) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-        // Configurar cabeza del jugador
         meta.setOwningPlayer(Bukkit.getOfflinePlayer(UUID.fromString(staffMember.getUuid())));
 
-        // Obtener formato del nombre
-        String nameFormat = plugin.getStaffMenu().getString("MAIN-MENU.STAFF-HEAD.NAME");
+        String nameFormat = plugin.getStaffMenu().getConfig().getString("MAIN-MENU.STAFF-HEAD.NAME", "&e{name}");
         meta.setDisplayName(nameFormat.replace("{name}", staffMember.getName()).replace("&", "§"));
 
-        // Obtener formato del lore
+        meta.setLore(createStaffHeadLore(staffMember));
+
+        head.setItemMeta(meta);
+        return head;
+    }
+
+    private List<String> createStaffHeadLore(DPlayer staffMember) {
         List<String> loreFormat = plugin.getStaffMenu().getConfig().getStringList("MAIN-MENU.STAFF-HEAD.LORE");
         List<String> lore = new ArrayList<>();
 
-        // Estado online/offline
         boolean isOnline = staffMember.isOnline();
-        String statusText;
-        if (isOnline) {
-            statusText = plugin.getStaffMenu().getConfig().getString("MAIN-MENU.STAFF-HEAD.ONLINE-TEXT");
-            statusText = statusText.replace("{current-server}", staffMember.getCurrentServer());
-        } else {
-            statusText = plugin.getStaffMenu().getConfig().getString("MAIN-MENU.STAFF-HEAD.OFFLINE-TEXT");
-        }
-
-        // Formatear tiempo
+        String statusText = getStatusText(staffMember, isOnline);
         String formattedTime = formatTime(staffMember.getDailyTime());
+        String lastSeen = formatDate(staffMember.getLastSeen());
 
-        // Formatear fecha
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        String lastSeen = sdf.format(new Date(staffMember.getLastSeen()));
-
-        // Procesar el lore completo con placeholders
         for (String line : loreFormat) {
             if (line.contains("{online}")) {
-                // Manejar el caso especial de estado online/offline que puede tener múltiples líneas
-                for (String statusLine : statusText.split("\n")) {
-                    lore.add(statusLine.replace("&", "§"));
-                }
+                addStatusLines(lore, statusText);
             } else {
-                lore.add(line
-                        .replace("{daily-time}", formattedTime)
-                        .replace("{last-server}", staffMember.getLastServer())
-                        .replace("{last-seen}", lastSeen)
-                        .replace("&", "§"));
+                lore.add(replacePlaceholders(line, staffMember, formattedTime, lastSeen));
             }
         }
 
-        meta.setLore(lore);
-        head.setItemMeta(meta);
-        return head;
+        return lore;
+    }
+
+    private String getStatusText(DPlayer staffMember, boolean isOnline) {
+        if (isOnline) {
+            String template = plugin.getStaffMenu().getString("MAIN-MENU.STAFF-HEAD.ONLINE-TEXT");
+            return template.replace("{current-server}", staffMember.getCurrentServer());
+        }
+
+        return plugin.getStaffMenu().getString("MAIN-MENU.STAFF-HEAD.OFFLINE-TEXT");
+    }
+
+    private void addStatusLines(List<String> lore, String statusText) {
+        for (String statusLine : statusText.split("\n")) {
+            lore.add(statusLine.replace("&", "§"));
+        }
+    }
+
+    private String replacePlaceholders(String line, DPlayer staffMember, String formattedTime, String lastSeen) {
+        return line.replace("{daily-time}", formattedTime).replace("{last-server}", staffMember.getLastServer()).replace("{last-seen}", lastSeen).replace("&", "§");
+    }
+
+    private String formatDate(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        return sdf.format(new Date(timestamp));
+    }
+
+    private ItemStack createNamedItem(Material material, String name) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name.replace("&", "§"));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createItem(Material material, String name, List<String> lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name.replace("&", "§"));
+
+        if (!lore.isEmpty()) {
+            List<String> coloredLore = new ArrayList<>();
+            for (String line : lore) {
+                coloredLore.add(line.replace("&", "§"));
+            }
+            meta.setLore(coloredLore);
+        }
+
+        item.setItemMeta(meta);
+        return item;
     }
 
     private String formatTime(long milliseconds) {
         long hours = TimeUnit.MILLISECONDS.toHours(milliseconds);
         long minutes = TimeUnit.MILLISECONDS.toMinutes(milliseconds) % 60;
-
         return hours + "h " + minutes + "m";
     }
 
     public void openMenu(Player player) {
         open(player);
+    }
+
+    private static class StaffValidationResult {
+        private final List<DPlayer> validStaffMembers;
+        private final List<UUID> membersToRemove;
+
+        public StaffValidationResult(List<DPlayer> validStaffMembers, List<UUID> membersToRemove) {
+            this.validStaffMembers = validStaffMembers;
+            this.membersToRemove = membersToRemove;
+        }
     }
 }
