@@ -85,15 +85,18 @@ public class PlayerDataManager {
             DPlayer playerData = playerDataMap.get(uuid);
             if (playerData == null) return;
 
+            // Guardar datos generales del jugador
             String jsonData = GsonUtil.getGson().toJson(playerData);
             Document document = Document.parse(jsonData);
             Document newDocument = new Document();
-
-            // Asegurarse de que el nombre esté actualizado
-            playerData.setName(getPlayerName(uuid));
-
             newDocument.put("_id", uuid.toString());
             newDocument.put("data", document);
+
+            // Guardar registro de tiempo diario en historial
+            if (playerData.getDailyTime() > 0) {
+                StaffSync.getInstance().getManagerHandler().getTimeManager().saveTimeRecord(uuid, playerData.getDailyTime());
+            }
+
             StaffSync.getInstance().getMongoHandler().getPlayers().replaceOne(
                     Filters.eq("_id", uuid.toString()),
                     newDocument,

@@ -30,6 +30,8 @@ public interface IMenu extends InventoryHolder {
 
     void onDrag(Player player, InventoryDragEvent event);
 
+    void middleClick(Player player, int slot, InventoryClickEvent event);
+
     void onClose(Player player, InventoryCloseEvent event);
 
     void setItem(int slot, ItemStack itemStack);

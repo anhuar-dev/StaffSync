@@ -85,6 +85,10 @@ public abstract class MenuUtil implements IMenu {
     }
 
     @Override
+    public void middleClick(Player player, int slot, InventoryClickEvent event) {
+    }
+
+    @Override
     public void onClose(Player player, InventoryCloseEvent event) {
         if (closeAction != null) {
             closeAction.accept(player, event);

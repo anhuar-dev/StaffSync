@@ -15,6 +15,7 @@ package dev.anhuar.staffSync.handler;
 
 import dev.anhuar.staffSync.StaffSync;
 import dev.anhuar.staffSync.manager.PlayerDataManager;
+import dev.anhuar.staffSync.manager.TimeManager;
 import lombok.Getter;
 
 @Getter
@@ -23,6 +24,7 @@ public class ManagerHandler {
     private final StaffSync plugin;
 
     private PlayerDataManager playerDataManager;
+    private TimeManager timeManager;
 
     public ManagerHandler(StaffSync plugin) {
         this.plugin = plugin;
@@ -31,5 +33,6 @@ public class ManagerHandler {
 
     public void registerManager() {
         this.playerDataManager = new PlayerDataManager();
+        this.timeManager = new TimeManager(plugin);
     }
 }

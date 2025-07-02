@@ -17,6 +17,7 @@ import dev.anhuar.staffSync.util.menu.IMenu;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -36,6 +37,10 @@ public class InventoryListener implements Listener {
 
         if (clickedInventory != null && clickedInventory.equals(topInventory)) {
             menu.click(player, event.getSlot(), event);
+
+            if (event.getClick() == ClickType.SHIFT_RIGHT) {
+                menu.middleClick(player, event.getSlot(), event);
+            }
         }
     }
 

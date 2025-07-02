@@ -1,0 +1,100 @@
+TIME-MENU:
+  TITLE: "&eHistorial de Tiempo de &7{player}"
+  SIZE: 6
+
+  # Define los slots donde aparecerán los registros de tiempo
+  TIME-SLOTS:
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+    - 28
+    - 29
+    - 30
+    - 31
+    - 32
+    - 33
+    - 34
+    - 37
+    - 38
+    - 39
+    - 40
+    - 41
+    - 42
+    - 43
+
+  # Configuración de los items de tiempo
+  TIME-ITEM:
+    MATERIAL: "CLOCK"
+    NAME: "&e{date}"
+    DATE-FORMAT: "dd/MM/yyyy"
+    LORE:
+      - "&7Tiempo total: &f{time}"
+      - ""
+      - "&8Este registro muestra el tiempo total"
+      - "&8que este miembro del staff estuvo"
+      - "&8online durante este día."
+
+  # Mensaje cuando no hay historial
+  NO-HISTORY:
+    NAME: "&cSin historial"
+    LORE:
+      - "&7Este miembro del staff no tiene"
+      - "&7registros de tiempo guardados."
+    SLOT: 22
+
+  # Navegación de páginas
+  NAVIGATION:
+    PREVIOUS:
+      MATERIAL: "ARROW"
+      NAME: "&aPágina anterior"
+      LORE:
+        - "&7Click para ir a la página anterior"
+      SLOT: 48
+
+    NEXT:
+      MATERIAL: "ARROW"
+      NAME: "&aPágina siguiente"
+      LORE:
+        - "&7Click para ir a la página siguiente"
+      SLOT: 50
+
+    PAGE-INDICATOR:
+      MATERIAL: "PAPER"
+      FORMAT: "&7Página {current}/{total}"
+      LORE:
+        - "&7Mostrando registros de tiempo"
+      SLOT: 49
+
+  # Items decorativos del menú
+  DECORATION:
+    BORDER:
+      ENABLED: true
+      MATERIAL: "BLACK_STAINED_GLASS_PANE"
+      NAME: "&8"
+      SLOTS:
+        - 0, 1, 2, 3, 4, 5, 6, 7, 8
+        - 9, 17, 18, 26, 27, 35, 36, 44
+        - 45, 46, 47, 51, 52, 53
+
+    # Items personalizados adicionales
+    CUSTOM-ITEMS:
+      BACK:
+        ENABLED: true
+        MATERIAL: "BARRIER"
+        NAME: "&cVolver"
+        LORE:
+          - "&7Haz clic para volver al"
+          - "&7menú principal."
+        SLOT: 49
+        ACTION: "back"

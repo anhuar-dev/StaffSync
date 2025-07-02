@@ -20,6 +20,7 @@ import dev.anhuar.staffSync.util.menu.MenuUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -320,4 +321,24 @@ public class MainMenu extends MenuUtil {
             this.membersToRemove = membersToRemove;
         }
     }
+
+    @Override
+    public void middleClick(Player player, int slot, InventoryClickEvent event) {
+        List<Integer> staffSlots = plugin.getStaffMenu().getConfig().getIntegerList("MAIN-MENU.STAFF-SLOTS");
+
+        if (staffSlots.contains(slot)) {
+            ItemStack item = event.getCurrentItem();
+            if (item != null && item.getType() == Material.PLAYER_HEAD) {
+                SkullMeta meta = (SkullMeta) item.getItemMeta();
+                if (meta != null && meta.getOwningPlayer() != null) {
+                    String targetName = meta.getOwningPlayer().getName();
+                    UUID targetUUID = meta.getOwningPlayer().getUniqueId();
+
+                    // Abrir el menú de tiempo para este jugador
+                    new TimeMenu(plugin, targetName, targetUUID).openMenu(player);
+                }
+            }
+        }
+    }
+
 }
